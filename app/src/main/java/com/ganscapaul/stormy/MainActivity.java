@@ -24,26 +24,27 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
+        //Darkski api
         String apiKey = "9cd787e66f31e55681fff3a67a873d47";
         double latitude = 37.8267;
         double longitude = -122.4233;
         String forecastUrl = "https://api.darksky.net/forecast/" + apiKey +
                 "/" + latitude + "," + longitude;
-
+        //check for availability
         if (isNetworkAvailable()) {
             OkHttpClient client = new OkHttpClient();
             Request request = new Request.Builder()
                     .url(forecastUrl)
                     .build();
-
+            //call and request enters the que but not on main thread
             Call call = client.newCall(request);
             call.enqueue(new Callback() {
+                //bollocks
                 @Override
                 public void onFailure(Call call, IOException e) {
 
                 }
-
+                //get lucky and get weather data
                 @Override
                 public void onResponse(Call call, Response response) throws IOException {
                     try {
@@ -58,13 +59,14 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
         } else {
+            //display dialog with error
             AlertDialogFragment dialog = new AlertDialogFragment();
             dialog.show(getFragmentManager(), "error_dialog");
         }
-
+        //this is the main thread
         Log.d(TAG, "Main UI code running!");
     }
-
+    //re-usable code in checking for Network availability
     private boolean isNetworkAvailable() {
         ConnectivityManager manager = (ConnectivityManager)
                 getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -75,7 +77,7 @@ public class MainActivity extends AppCompatActivity {
         }
         return isAvailable;
     }
-
+    //created dialog to show error
     private void alertUserAboutError() {
         AlertDialogFragment dialog = new AlertDialogFragment();
         dialog.show(getFragmentManager(), "error_dialog");

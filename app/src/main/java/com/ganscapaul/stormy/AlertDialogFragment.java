@@ -7,7 +7,7 @@ import android.content.Context;
 import android.os.Bundle;
 
 public class AlertDialogFragment extends DialogFragment {
-
+    //create a simple dialog with one positive button
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
         Context context = getActivity();
