@@ -8,6 +8,9 @@ import android.os.Bundle;
 import android.util.Log;
 import android.widget.Toast;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.IOException;
 
 import okhttp3.Call;
@@ -19,6 +22,8 @@ import okhttp3.Response;
 public class MainActivity extends AppCompatActivity {
 
     public static final String TAG = MainActivity.class.getSimpleName();
+
+    private CurrentWeather mCurrentWeather;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,12 +53,16 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void onResponse(Call call, Response response) throws IOException {
                     try {
-                        Log.v(TAG, response.body().string());
+                        String jsonData = response.body().string();
+                        Log.v(TAG, jsonData);
                         if (response.isSuccessful()) {
+                            mCurrentWeather = getCurrentDetails(jsonData);
                         } else {
                             alertUserAboutError();
                         }
                     } catch (IOException e) {
+                        Log.e(TAG, "Exception Caught: ", e);
+                    } catch (JSONException e) {
                         Log.e(TAG, "Exception Caught: ", e);
                     }
                 }
@@ -66,6 +75,29 @@ public class MainActivity extends AppCompatActivity {
         //this is the main thread
         Log.d(TAG, "Main UI code running!");
     }
+    //exception gets handled where the method is called
+    private CurrentWeather getCurrentDetails(String jsonData) throws JSONException {
+        //JSONObject used to get data
+        JSONObject forecast = new JSONObject(jsonData);
+        String timezone = forecast.getString("timezone");
+
+        Log.i(TAG, "FROM JSON: " +  timezone);
+
+        JSONObject currently = forecast.getJSONObject("currently");
+
+        CurrentWeather currentWeather = new CurrentWeather();
+        currentWeather.setmHumidity(currently.getDouble("humidity"));
+        currentWeather.setmTime(currently.getLong("time"));
+        currentWeather.setmIcon(currently.getString("icon"));
+        currentWeather.setmPrecipChance(currently.getDouble("precipProbability"));
+        currentWeather.setmTemperature(currently.getDouble("temperature"));
+        currentWeather.setmTimeZone(timezone);
+
+        Log.d(TAG, currentWeather.getFormattedTime());
+
+        return new CurrentWeather();
+    }
+
     //re-usable code in checking for Network availability
     private boolean isNetworkAvailable() {
         ConnectivityManager manager = (ConnectivityManager)
