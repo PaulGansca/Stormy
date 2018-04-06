@@ -17,7 +17,7 @@ public class CurrentWeather {
         return mSummary;
     }
 
-    public void setmSummary(String mSummary) {
+    public void setSummary(String mSummary) {
         this.mSummary = mSummary;
     }
 
@@ -92,8 +92,9 @@ public class CurrentWeather {
         this.mTime = mTime;
     }
 
-    public double getmTemperature() {
-        return mTemperature;
+    public int getmTemperature() {
+
+        return (int)(Math.round(mTemperature)-32)*5/9;
     }
 
     public void setmTemperature(double mTemperature) {
@@ -108,8 +109,9 @@ public class CurrentWeather {
         this.mHumidity = mHumidity;
     }
 
-    public double getmPrecipChance() {
-        return mPrecipChance;
+    public int getmPrecipChance() {
+        double precipPercentage = mPrecipChance*100;
+        return (int) Math.round(precipPercentage);
     }
 
     public void setmPrecipChance(double mPrecipChance) {
