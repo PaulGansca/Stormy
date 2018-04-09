@@ -11,7 +11,9 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.Toast;
+
+import com.ganscapaul.stormy.ui.AlertDialogFragment;
+import com.ganscapaul.stormy.weather.Current;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -30,9 +32,9 @@ public class MainActivity extends AppCompatActivity {
 
     public static final String TAG = MainActivity.class.getSimpleName();
 
-    private CurrentWeather mCurrentWeather;
+    private Current mCurrent;
 
-
+/*
     @BindView(R.id.timeLabel) TextView mTimeLabel;
     @BindView(R.id.temperatureLabel) TextView mTemperatureLabel;
     @BindView(R.id.humidityValue) TextView mHumidityValue;
@@ -42,7 +44,7 @@ public class MainActivity extends AppCompatActivity {
     @BindView(R.id.degreeImageView) ImageView mDegreeImageView;
     @BindView(R.id.refreshImageView) ImageView mRefreshImageView;
     @BindView(R.id.progressBar) ProgressBar mProgressBar;
-
+*/
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -109,7 +111,7 @@ public class MainActivity extends AppCompatActivity {
                         String jsonData = response.body().string();
                         Log.v(TAG, jsonData);
                         if (response.isSuccessful()) {
-                            mCurrentWeather = getCurrentDetails(jsonData);
+                            mCurrent = getCurrentDetails(jsonData);
                             runOnUiThread(new Runnable() {
                                 @Override
                                 public void run() {
@@ -146,18 +148,18 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void updateDisplay() {
-        mTemperatureLabel.setText(mCurrentWeather.getmTemperature() + "");
-        mTimeLabel.setText("At " + mCurrentWeather.getFormattedTime() + " it will be");
-        mHumidityValue.setText(mCurrentWeather.getmHumidity() + "");
-        mPrecipValue.setText(mCurrentWeather.getmPrecipChance() + "%");
-        mSummaryLabel.setText(mCurrentWeather.getmSummary());
+        mTemperatureLabel.setText(mCurrent.getmTemperature() + "");
+        mTimeLabel.setText("At " + mCurrent.getFormattedTime() + " it will be");
+        mHumidityValue.setText(mCurrent.getmHumidity() + "");
+        mPrecipValue.setText(mCurrent.getmPrecipChance() + "%");
+        mSummaryLabel.setText(mCurrent.getmSummary());
 
-        Drawable drawable = getResources().getDrawable(mCurrentWeather.getIconId());
+        Drawable drawable = getResources().getDrawable(mCurrent.getIconId());
         mIconImageView.setImageDrawable(drawable);
     }
 
     //exception gets handled where the method is called
-    private CurrentWeather getCurrentDetails(String jsonData) throws JSONException {
+    private Current getCurrentDetails(String jsonData) throws JSONException {
         //JSONObject used to get data
         JSONObject forecast = new JSONObject(jsonData);
         String timezone = forecast.getString("timezone");
@@ -166,18 +168,18 @@ public class MainActivity extends AppCompatActivity {
 
         JSONObject currently = forecast.getJSONObject("currently");
 
-        CurrentWeather currentWeather = new CurrentWeather();
-        currentWeather.setmHumidity(currently.getDouble("humidity"));
-        currentWeather.setmTime(currently.getLong("time"));
-        currentWeather.setmIcon(currently.getString("icon"));
-        currentWeather.setmPrecipChance(currently.getDouble("precipProbability"));
-        currentWeather.setmTemperature(currently.getDouble("temperature"));
-        currentWeather.setmTimeZone(timezone);
-        currentWeather.setSummary(currently.getString("summary"));
+        Current current = new Current();
+        current.setmHumidity(currently.getDouble("humidity"));
+        current.setmTime(currently.getLong("time"));
+        current.setmIcon(currently.getString("icon"));
+        current.setmPrecipChance(currently.getDouble("precipProbability"));
+        current.setmTemperature(currently.getDouble("temperature"));
+        current.setmTimeZone(timezone);
+        current.setSummary(currently.getString("summary"));
 
-        Log.d(TAG, currentWeather.getFormattedTime());
+        Log.d(TAG, current.getFormattedTime());
 
-        return currentWeather;
+        return current;
     }
 
     //re-usable code in checking for Network availability
