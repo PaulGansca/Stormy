@@ -1,4 +1,6 @@
-package com.ganscapaul.stormy;
+package com.ganscapaul.stormy.weather;
+
+import com.ganscapaul.stormy.R;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;

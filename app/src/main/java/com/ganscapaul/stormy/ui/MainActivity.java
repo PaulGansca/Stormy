@@ -1,4 +1,4 @@
-package com.ganscapaul.stormy;
+package com.ganscapaul.stormy.ui;
 
 import android.content.Context;
 import android.graphics.drawable.Drawable;
@@ -12,13 +12,18 @@ import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
-import com.ganscapaul.stormy.ui.AlertDialogFragment;
+import com.ganscapaul.stormy.R;
 import com.ganscapaul.stormy.weather.Current;
+import com.ganscapaul.stormy.weather.Day;
+import com.ganscapaul.stormy.weather.Forecast;
+import com.ganscapaul.stormy.weather.Hour;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.lang.reflect.Array;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -32,9 +37,9 @@ public class MainActivity extends AppCompatActivity {
 
     public static final String TAG = MainActivity.class.getSimpleName();
 
-    private Current mCurrent;
+    private Forecast mForecast;
 
-/*
+
     @BindView(R.id.timeLabel) TextView mTimeLabel;
     @BindView(R.id.temperatureLabel) TextView mTemperatureLabel;
     @BindView(R.id.humidityValue) TextView mHumidityValue;
@@ -44,7 +49,7 @@ public class MainActivity extends AppCompatActivity {
     @BindView(R.id.degreeImageView) ImageView mDegreeImageView;
     @BindView(R.id.refreshImageView) ImageView mRefreshImageView;
     @BindView(R.id.progressBar) ProgressBar mProgressBar;
-*/
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -111,7 +116,7 @@ public class MainActivity extends AppCompatActivity {
                         String jsonData = response.body().string();
                         Log.v(TAG, jsonData);
                         if (response.isSuccessful()) {
-                            mCurrent = getCurrentDetails(jsonData);
+                            mForecast = parseForecastDetails(jsonData);
                             runOnUiThread(new Runnable() {
                                 @Override
                                 public void run() {
@@ -148,15 +153,77 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void updateDisplay() {
-        mTemperatureLabel.setText(mCurrent.getmTemperature() + "");
-        mTimeLabel.setText("At " + mCurrent.getFormattedTime() + " it will be");
-        mHumidityValue.setText(mCurrent.getmHumidity() + "");
-        mPrecipValue.setText(mCurrent.getmPrecipChance() + "%");
-        mSummaryLabel.setText(mCurrent.getmSummary());
+        Current current = mForecast.getCurrent();
+        mTemperatureLabel.setText(current.getmTemperature() + "");
+        mTimeLabel.setText("At " + current.getFormattedTime() + " it will be");
+        mHumidityValue.setText(current.getmHumidity() + "");
+        mPrecipValue.setText(current.getmPrecipChance() + "%");
+        mSummaryLabel.setText(current.getmSummary());
 
-        Drawable drawable = getResources().getDrawable(mCurrent.getIconId());
+        Drawable drawable = getResources().getDrawable(current.getIconId());
         mIconImageView.setImageDrawable(drawable);
     }
+
+    private Forecast parseForecastDetails(String jsonData) throws JSONException {
+        Forecast forecast = new Forecast();
+
+        forecast.setCurrent(getCurrentDetails(jsonData));
+        forecast.setHourlyForecast(getHourlyForecast(jsonData));
+        forecast.setDailyForecast(getDailyForecast(jsonData));
+
+        return forecast;
+    }
+
+    private Day[] getDailyForecast(String jsonData) throws JSONException {
+        //create a JSONObject to get the timezone
+        JSONObject forecast = new JSONObject(jsonData);
+        String timezone = forecast.getString("timezone");
+
+        //create a JSONObject to get the "data" array inside the daily
+        JSONObject daily = forecast.getJSONObject("daily");
+        JSONArray data = daily.getJSONArray("data");
+
+        Day[] days = new Day[data.length()];
+
+        for (int i = 0; i < data.length(); i++){
+            JSONObject jsonDay = data.getJSONObject(i);
+            Day day = new Day();
+
+            day.setSummary(jsonDay.getString("summary"));
+            day.setIcon(jsonDay.getString("icon"));
+            day.setTemperatureMax(jsonDay.getDouble("temperatureMax"));
+            day.setTime(jsonDay.getLong("time"));
+            day.setTimezone(timezone);
+
+            days[i] = day;
+        }
+
+        return days;
+    }
+
+    private Hour[] getHourlyForecast(String jsonData) throws JSONException {
+        JSONObject forecast = new JSONObject(jsonData);
+        String timezone = forecast.getString("timezone");
+
+        JSONObject hourly = forecast.getJSONObject("hourly");
+        JSONArray data = hourly.getJSONArray("data");
+
+        Hour [] hours = new Hour[data.length()];
+
+        for (int i = 0; i < data.length(); i++){
+            JSONObject jsonHour = data.getJSONObject(i);
+            Hour hour = new Hour();
+
+            hour.setmSummary(jsonHour.getString("summary"));
+            hour.setmTemperature(jsonHour.getDouble("temperature"));
+            hour.setmIcon(jsonHour.getString("icon"));
+            hour.setmTime(jsonHour.getLong("time"));
+            hour.setmTimeZone(timezone);
+
+            hours[i] = hour;
+        }
+
+        return hours;    }
 
     //exception gets handled where the method is called
     private Current getCurrentDetails(String jsonData) throws JSONException {

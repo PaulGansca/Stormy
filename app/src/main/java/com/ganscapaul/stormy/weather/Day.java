@@ -1,4 +1,4 @@
-package com.ganscapaul.stormy;
+package com.ganscapaul.stormy.weather;
 
 //Model class, will display weather by Day
 public class Day {
