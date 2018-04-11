@@ -41,7 +41,7 @@ public class MainActivity extends AppCompatActivity {
 
     private Forecast mForecast;
 
-
+    //butterknife binds views in one line
     @BindView(R.id.timeLabel) TextView mTimeLabel;
     @BindView(R.id.temperatureLabel) TextView mTemperatureLabel;
     @BindView(R.id.humidityValue) TextView mHumidityValue;
@@ -142,7 +142,7 @@ public class MainActivity extends AppCompatActivity {
             dialog.show(getFragmentManager(), "error_dialog");
         }
     }
-
+    //refresh animation handling
     private void toggleRefresh() {
         if (mProgressBar.getVisibility() == View.INVISIBLE){
             mProgressBar.setVisibility(View.VISIBLE);
@@ -153,7 +153,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
     }
-
+    //request new data
     private void updateDisplay() {
         Current current = mForecast.getCurrent();
         mTemperatureLabel.setText(current.getmTemperature() + "");
