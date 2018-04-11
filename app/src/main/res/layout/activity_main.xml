@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#fffc970b"
+    android:background="@drawable/bg_gradient"
     tools:context=".ui.MainActivity">
 
     <TextView
@@ -148,5 +148,34 @@
         android:layout_alignTop="@+id/refreshImageView"
         android:layout_alignBottom="@+id/refreshImageView"
         android:layout_centerHorizontal="true" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentEnd="true"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/hourlyButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:background="#40ffffff"
+            android:text="Hourly"
+            android:layout_marginLeft="18dp"
+            android:textColor="#ffffffff" />
+
+        <Button
+            android:id="@+id/dailyButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:background="#40ffffff"
+            android:text="7 DAY"
+            android:layout_marginLeft="4dp"
+            android:layout_marginRight="18dp"
+            android:textColor="#ffffffff" />
+    </LinearLayout>
 
 </RelativeLayout>
