@@ -1,6 +1,7 @@
 package com.ganscapaul.stormy.adapters;
 
 import android.content.Context;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -10,6 +11,8 @@ import android.widget.TextView;
 
 import com.ganscapaul.stormy.R;
 import com.ganscapaul.stormy.weather.Day;
+
+import static com.ganscapaul.stormy.ui.MainActivity.TAG;
 //DayAdapter to display all our day data in list format
 
 public class DayAdapter extends BaseAdapter {
@@ -59,8 +62,17 @@ public class DayAdapter extends BaseAdapter {
         Day day = mDays[position];
 
         holder.iconImageView.setImageResource(day.getIconId());
-        holder.temperatureLabel.setText(day.getTemperatureMax()+"");
-        holder.dayLabel.setText(day.getDayOfTheWeek());
+        try {
+            holder.temperatureLabel.setText(day.getTemperatureMax() + "");}
+        catch (Exception e){
+            Log.e(TAG, "Fatal Exception", e);
+        }
+
+        if (position == 0) {
+            holder.dayLabel.setText("Today");
+        } else {
+            holder.dayLabel.setText(day.getDayOfTheWeek());
+        }
 
         return convertView;
     }

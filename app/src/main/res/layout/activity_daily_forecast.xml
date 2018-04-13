@@ -8,6 +8,27 @@
     tools:context=".ui.DailyForecastActivity">
 
     <TextView
+        android:id="@+id/locationLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="10dp"
+        android:text="@string/location"
+        android:textColor="#ffff"
+        android:textSize="18sp" />
+
+    <TextView
+        android:id="@+id/thisWeekLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="16dp"
+        android:text="This Week's Weather"
+        android:textColor="#ffff"
+        android:textSize="30sp" />
+
+    <TextView
         android:id="@android:id/empty"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -20,7 +41,14 @@
     <ListView
         android:id="@android:id/list"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_alignParentStart="true"
-        android:layout_alignParentTop="true" />
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@+id/locationLabel"
+        android:layout_alignParentLeft="true"
+        android:layout_alignTop="@+id/thisWeekLabel"
+        android:layout_marginBottom="36dp"
+        android:layout_marginLeft="16dp"
+        android:layout_marginTop="36dp"
+        android:addStatesFromChildren="false"
+        android:divider="@null"
+        android:dividerHeight="0dp"/>
 </RelativeLayout>
