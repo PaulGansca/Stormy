@@ -1,30 +1,49 @@
 package com.ganscapaul.stormy.ui;
 
+import android.Manifest;
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentSender;
+import android.content.pm.PackageManager;
 import android.graphics.drawable.Drawable;
+import android.location.Location;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.os.Looper;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+import android.support.v4.app.ActivityCompat;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.ganscapaul.stormy.R;
 import com.ganscapaul.stormy.weather.Current;
 import com.ganscapaul.stormy.weather.Day;
 import com.ganscapaul.stormy.weather.Forecast;
 import com.ganscapaul.stormy.weather.Hour;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.GoogleApiClient.ConnectionCallbacks;
+import com.google.android.gms.common.api.GoogleApiClient.OnConnectionFailedListener;
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationCallback;
+import com.google.android.gms.location.LocationListener;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationResult;
+import com.google.android.gms.location.LocationServices;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
-import java.lang.reflect.Array;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -40,19 +59,50 @@ public class MainActivity extends AppCompatActivity {
     public static final String TAG = MainActivity.class.getSimpleName();
     public static final String DAILY_FORECAST = "DAILY_FORECAST";
     public static final String HOURLY_FORECAST = "HOURLY_FORECAST";
+    private static final int REQUEST_CODE = 1000;
+    FusedLocationProviderClient fusedLocationProviderClient;
+    LocationRequest locationRequest;
+    LocationCallback locationCallback;
+    public String coords;
+    public String[] parts;
+    private double latitude;
+    private double longitude;
 
     private Forecast mForecast;
 
     //butterknife binds views in one line
-    @BindView(R.id.timeLabel) TextView mTimeLabel;
-    @BindView(R.id.temperatureLabel) TextView mTemperatureLabel;
-    @BindView(R.id.humidityValue) TextView mHumidityValue;
-    @BindView(R.id.precipValue) TextView mPrecipValue;
-    @BindView(R.id.summaryLabel) TextView mSummaryLabel;
-    @BindView(R.id.iconImageView) ImageView mIconImageView;
-    @BindView(R.id.degreeImageView) ImageView mDegreeImageView;
-    @BindView(R.id.refreshImageView) ImageView mRefreshImageView;
-    @BindView(R.id.progressBar) ProgressBar mProgressBar;
+    @BindView(R.id.timeLabel)
+    TextView mTimeLabel;
+    @BindView(R.id.temperatureLabel)
+    TextView mTemperatureLabel;
+    @BindView(R.id.humidityValue)
+    TextView mHumidityValue;
+    @BindView(R.id.precipValue)
+    TextView mPrecipValue;
+    @BindView(R.id.summaryLabel)
+    TextView mSummaryLabel;
+    @BindView(R.id.iconImageView)
+    ImageView mIconImageView;
+    @BindView(R.id.degreeImageView)
+    ImageView mDegreeImageView;
+    @BindView(R.id.refreshImageView)
+    ImageView mRefreshImageView;
+    @BindView(R.id.progressBar)
+    ProgressBar mProgressBar;
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        switch (requestCode) {
+            case REQUEST_CODE:{
+                if (grantResults.length > 0) {
+                    if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    } else if (grantResults[0] == PackageManager.PERMISSION_DENIED) {
+                    }
+                }
+            }
+        }
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,10 +110,30 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
 
-        mProgressBar.setVisibility(View.INVISIBLE);
+        if (ActivityCompat.shouldShowRequestPermissionRationale(this,
+                android.Manifest.permission.ACCESS_FINE_LOCATION)) {
+            ActivityCompat.requestPermissions(this, new String[]{
+                    android.Manifest.permission.ACCESS_FINE_LOCATION
+            }, REQUEST_CODE);
+        } else {
+            buildGoogleLocationRequest();
+            buildGoogleLocationCallback();
+            fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
+        }
 
-        final double latitude = 51.556316;
-        final double longitude = -0.085210;
+        if (ActivityCompat.checkSelfPermission(MainActivity.this,
+                android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                && ActivityCompat.checkSelfPermission(MainActivity.this,
+                android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(MainActivity.this, new String[]{
+                    android.Manifest.permission.ACCESS_FINE_LOCATION
+            }, REQUEST_CODE);
+            return;
+        }
+        fusedLocationProviderClient.requestLocationUpdates(locationRequest,
+                locationCallback, Looper.myLooper());
+
+        mProgressBar.setVisibility(View.INVISIBLE);
 
         mRefreshImageView.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -71,11 +141,10 @@ public class MainActivity extends AppCompatActivity {
                 getForecast(latitude, longitude);
             }
         });
-        getForecast(latitude, longitude);
-
 
         //this is the main thread
         Log.d(TAG, "Main UI code running!");
+        getForecast(latitude, longitude);
     }
 
     private void getForecast(double latitude, double longitude) {
@@ -144,9 +213,10 @@ public class MainActivity extends AppCompatActivity {
             dialog.show(getFragmentManager(), "error_dialog");
         }
     }
+
     //refresh animation handling
     private void toggleRefresh() {
-        if (mProgressBar.getVisibility() == View.INVISIBLE){
+        if (mProgressBar.getVisibility() == View.INVISIBLE) {
             mProgressBar.setVisibility(View.VISIBLE);
             mRefreshImageView.setVisibility(View.INVISIBLE);
         } else {
@@ -155,6 +225,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
     }
+
     //request new data
     private void updateDisplay() {
         Current current = mForecast.getCurrent();
@@ -189,7 +260,7 @@ public class MainActivity extends AppCompatActivity {
 
         Day[] days = new Day[data.length()];
 
-        for (int i = 0; i < data.length(); i++){
+        for (int i = 0; i < data.length(); i++) {
             JSONObject jsonDay = data.getJSONObject(i);
             Day day = new Day();
 
@@ -212,9 +283,9 @@ public class MainActivity extends AppCompatActivity {
         JSONObject hourly = forecast.getJSONObject("hourly");
         JSONArray data = hourly.getJSONArray("data");
 
-        Hour [] hours = new Hour[data.length()];
+        Hour[] hours = new Hour[data.length()];
 
-        for (int i = 0; i < data.length(); i++){
+        for (int i = 0; i < data.length(); i++) {
             JSONObject jsonHour = data.getJSONObject(i);
             Hour hour = new Hour();
 
@@ -227,7 +298,8 @@ public class MainActivity extends AppCompatActivity {
             hours[i] = hour;
         }
 
-        return hours;    }
+        return hours;
+    }
 
     //exception gets handled where the method is called
     private Current getCurrentDetails(String jsonData) throws JSONException {
@@ -235,7 +307,7 @@ public class MainActivity extends AppCompatActivity {
         JSONObject forecast = new JSONObject(jsonData);
         String timezone = forecast.getString("timezone");
 
-        Log.i(TAG, "FROM JSON: " +  timezone);
+        Log.i(TAG, "FROM JSON: " + timezone);
 
         JSONObject currently = forecast.getJSONObject("currently");
 
@@ -259,11 +331,12 @@ public class MainActivity extends AppCompatActivity {
                 getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo networkInfo = manager.getActiveNetworkInfo();
         boolean isAvailable = false;
-        if (networkInfo != null && networkInfo.isConnected()){
+        if (networkInfo != null && networkInfo.isConnected()) {
             isAvailable = true;
         }
         return isAvailable;
     }
+
     //created dialog to show error
     private void alertUserAboutError() {
         AlertDialogFragment dialog = new AlertDialogFragment();
@@ -271,18 +344,40 @@ public class MainActivity extends AppCompatActivity {
     }
 
     //Switch to daily weather
-    @OnClick (R.id.dailyButton)
+    @OnClick(R.id.dailyButton)
     public void startDailyActivity(View view) {
-        Intent intent = new Intent (this, DailyForecastActivity.class);
+        Intent intent = new Intent(this, DailyForecastActivity.class);
         intent.putExtra(DAILY_FORECAST, mForecast.getDailyForecast());
         startActivity(intent);
     }
 
     //Switch to hourly weather
-    @OnClick (R.id.hourlyButton)
-    public void startHourlyActivity(View view){
+    @OnClick(R.id.hourlyButton)
+    public void startHourlyActivity(View view) {
         Intent intent = new Intent(this, HourlyForecastActivity.class);
         intent.putExtra(HOURLY_FORECAST, mForecast.getHourlyForecast());
         startActivity(intent);
     }
+
+    public void buildGoogleLocationCallback() {
+        locationCallback= new LocationCallback(){
+            @Override
+            public void onLocationResult(LocationResult locationResult) {
+                for(Location location:locationResult.getLocations())
+                    coords = location.getLatitude()+"/" + location.getLongitude();
+                    parts = coords.split("/");
+                    latitude = Double.parseDouble(parts[0]);
+                    longitude = Double.parseDouble(parts[1]);
+            }
+        };
+    }
+
+    public void buildGoogleLocationRequest() {
+        locationRequest= new LocationRequest();
+        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        locationRequest.setInterval(5000);
+        locationRequest.setFastestInterval(3000);
+        locationRequest.setSmallestDisplacement(10);
+    }
+
 }

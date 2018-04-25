@@ -6,4 +6,5 @@
     <string name="network_unavailable_message">Network is unavailable!</string>
     <string name="no_daily_forecast_data">There is no data to display</string>
     <string name="location">London</string>
+    <string name="title_activity_maps">Map</string>
 </resources>
